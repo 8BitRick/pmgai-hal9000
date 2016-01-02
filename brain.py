@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import nltk.chat
+import win32com.client
 
 AGENT_RESPONSES = [
   (r'You are (worrying|scary|disturbing)',    # Pattern 1.
@@ -21,6 +22,7 @@ class Brain(object):
         self.num_responses = 0
         self.location = "lobby"
         self.chatbot = nltk.chat.Chat(AGENT_RESPONSES, nltk.chat.util.reflections)
+        self.voice = win32com.client.Dispatch("SAPI.SpVoice")
     
     def get_response(self,in_str):
         out_str = "blah blah blah"
@@ -31,6 +33,8 @@ class Brain(object):
         else:
             out_str = self.chatbot.respond(in_str)        
         self.num_responses += 1
+        
+        self.voice.Speak(out_str)
         return out_str
         
     def relocate_to(self,in_str):
