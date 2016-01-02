@@ -7,19 +7,21 @@ import vispy                    # Main application support.
 
 import window                   # Terminal input and display.
 
+import brain # module for HAL's brain
 
 class HAL9000(object):
     
-    def __init__(self, terminal):
+    def __init__(self, terminal, brain):
         """Constructor for the agent, stores references to systems and initializes internal memory.
         """
         self.terminal = terminal
+        self.brain = brain
         self.location = 'unknown'
 
     def on_input(self, evt):
         """Called when user types anything in the terminal, connected via event.
         """
-        self.terminal.log("Good morning! This is HAL.", align='right', color='#00805A')
+        self.terminal.log(self.brain.get_response(evt.text), align='right', color='#00805A')
 
     def on_command(self, evt):
         """Called when user types a command starting with `/` also done via events.
@@ -30,6 +32,7 @@ class HAL9000(object):
         elif evt.text.startswith('relocate'):
             self.terminal.log('', align='center', color='#404040')
             self.terminal.log('\u2014 Now in the {}. \u2014'.format(evt.text[9:]), align='center', color='#404040')
+            self.brain.relocate_to(evt.text[9:])
 
         else:
             self.terminal.log('Command `{}` unknown.'.format(evt.text), align='left', color='#ff3000')    
@@ -46,13 +49,16 @@ class Application(object):
     def __init__(self):
         # Create and open the window for user interaction.
         self.window = window.TerminalWindow()
-
+        
+        # Initialize HAL's brain
+        self.brain = brain.Brain()
+        
         # Print some default lines in the terminal as hints.
         self.window.log('Operator started the chat.', align='left', color='#808080')
         self.window.log('HAL9000 joined.', align='right', color='#808080')
 
         # Construct and initialize the agent for this simulation.
-        self.agent = HAL9000(self.window)
+        self.agent = HAL9000(self.window, self.brain)
 
         # Connect the terminal's existing events.
         self.window.events.user_input.connect(self.agent.on_input)
