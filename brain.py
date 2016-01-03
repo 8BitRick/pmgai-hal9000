@@ -23,7 +23,7 @@ class Brain(object):
         self.location = "lobby"
         self.chatbot = nltk.chat.Chat(AGENT_RESPONSES, nltk.chat.util.reflections)
         self.voice = win32com.client.Dispatch("SAPI.SpVoice")
-    
+
     def get_response(self,in_str):
         out_str = "blah blah blah"
         if(self.num_responses <= 0):

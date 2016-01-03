@@ -8,15 +8,36 @@ import vispy                    # Main application support.
 import window                   # Terminal input and display.
 
 import brain # module for HAL's brain
+import speech_recognition as sr
+import speech
+import logging
+import sys
 
-class HAL9000(object):
-    
+class HAL9000(speech.SpeechMixin):
+#class HAL9000(object):
+
     def __init__(self, terminal, brain):
+        super().__init__()
         """Constructor for the agent, stores references to systems and initializes internal memory.
         """
         self.terminal = terminal
         self.brain = brain
         self.location = 'unknown'
+        
+        logging.basicConfig(filename="std.log")
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+        self.log = root
+#        self.r = sr.Recognizer()
+#        self.r.energy_threshold = 1000           # Tune based on ambient noise levels [1000,4000].
+
+    def __del__(self):
+        self.stop()
 
     def on_input(self, evt):
         """Called when user types anything in the terminal, connected via event.
@@ -33,10 +54,26 @@ class HAL9000(object):
             self.terminal.log('', align='center', color='#404040')
             self.terminal.log('\u2014 Now in the {}. \u2014'.format(evt.text[9:]), align='center', color='#404040')
             self.brain.relocate_to(evt.text[9:])
-
+        elif evt.text.startswith('listen'):
+            self.terminal.log('Listening', align='right', color='#ff3000')
+#            with sr.Microphone() as source:     # Use the default microphone as the audio source.
+#                audio = self.r.listen(source)        # Listen for single phrase and extract as audio.
+#            try:
+#                text = self.r.recognize_google(audio)       # Extract text using Google Speech Recognition.
+#            except LookupError:
+#                text = "Did not understand"                     # Could not recognize anything from audio...
+#            print(text)
+            #self.listen()
         else:
             self.terminal.log('Command `{}` unknown.'.format(evt.text), align='left', color='#ff3000')    
             self.terminal.log("I'm afraid I can't do that.", align='right', color='#00805A')
+
+    def onMessage(self, source, message):
+        if(message is None or message == ""):
+            self.terminal.log("Heard something inaudible")
+        else:
+            self.terminal.log('Heard from microphone: ' + message)
+            self.terminal.log(self.brain.get_response(message), align='right', color='#00805A')
 
     def update(self, _):
         """Main update called once per second via the timer.
